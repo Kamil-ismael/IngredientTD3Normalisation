@@ -14,24 +14,11 @@ values (1, 'Laitue', 'VEGETABLE', 800.0, 1),
 
 
 insert into dish_ingredient (id_dish, id_ingredient, quantity, unit) values
-(1, 1, 1.0, 'PIECE'),
-(1, 2, 0.25, 'KG'),
-
-(2, 3, 0.5, 'KG'),
-(2, 4, 0.15, 'L'),
-
-(3, 5, 0.6, 'KG'),
-(3, 6, 0.3, 'KG'),
-
-(4, 7, 0.2, 'KG'),
-(4, 8, 0.1, 'KG'),
-(4, 2, 0.15, 'KG'),
-
-(5, 9, 0.3, 'KG'),
-(5, 10, 0.4, 'KG'),
-
-(6, 2, 0.3, 'KG'),
-(6, 8, 0.05, 'KG');
+(1, 1, 0.20, 'KG'),
+(1, 2, 0.15, 'KG'),
+(2, 3, 1.00, 'KG'),
+(4, 4, 0.30, 'KG'),
+(4, 5, 0.20, 'KG');
 update dish
 set price = 2000.0
 where id = 1;
