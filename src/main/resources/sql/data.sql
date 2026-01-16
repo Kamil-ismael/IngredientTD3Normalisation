@@ -1,9 +1,9 @@
-insert into dish (id, name, dish_type)
-values (1,'Salade fraîche', 'STARTER'),
-       (2, 'Poulet grillé', 'MAIN'),
-       (3, 'Riz aux légumes', 'MAIN'),
-       (4, 'Gâteau au chocolat ', 'DESSERT'),
-       (5, 'Salade de fruits', 'DESSERT');
+insert into dish (id, name, dish_type, price)
+values (1,'Salade fraîche', 'START', 3500.00),
+       (2, 'Poulet grillé', 'MAIN', 12000.00),
+       (3, 'Riz aux légumes', 'MAIN', NULL),
+       (4, 'Gâteau au chocolat ', 'DESSERT', 8000.00),
+       (5, 'Salade de fruits', 'DESSERT', NULL);
 
 insert into ingredient (id, name, category, price, id_dish)
 values (1, 'Laitue', 'VEGETABLE', 800.0, 1),
@@ -13,7 +13,25 @@ values (1, 'Laitue', 'VEGETABLE', 800.0, 1),
        (5, 'Beurre', 'DAIRY', 2500.0, 4);
 
 
+insert into dish_ingredient (id_dish, id_ingredient, quantity, unit) values
+(1, 1, 1.0, 'PIECE'),
+(1, 2, 0.25, 'KG'),
 
+(2, 3, 0.5, 'KG'),
+(2, 4, 0.15, 'L'),
+
+(3, 5, 0.6, 'KG'),
+(3, 6, 0.3, 'KG'),
+
+(4, 7, 0.2, 'KG'),
+(4, 8, 0.1, 'KG'),
+(4, 2, 0.15, 'KG'),
+
+(5, 9, 0.3, 'KG'),
+(5, 10, 0.4, 'KG'),
+
+(6, 2, 0.3, 'KG'),
+(6, 8, 0.05, 'KG');
 update dish
 set price = 2000.0
 where id = 1;
