@@ -6,7 +6,7 @@ public class Dish {
     private Double price;
     private String name;
     private DishTypeEnum dishType;
-    private List<Ingredient> ingredients;
+    private List<DishIngredient> dishIngredients;
 
     public Double getPrice() {
         return price;
@@ -17,15 +17,25 @@ public class Dish {
     }
 
     public Double getDishCost() {
-        double totalPrice = 0;
-        for (int i = 0; i < ingredients.size(); i++) {
-            Double quantity = ingredients.get(i).getQuantity();
-            if(quantity == null) {
-                throw new RuntimeException("...");
-            }
-            totalPrice = totalPrice + ingredients.get(i).getPrice() * quantity;
+        if (dishIngredients == null || dishIngredients.isEmpty()) {
+            return 0.0;
         }
-        return totalPrice;
+
+        double totalCost = 0.0;
+        for (DishIngredient dishIngredient : dishIngredients) {
+            if (dishIngredient.getQuantity() == null) {
+                throw new RuntimeException("Quantity cannot be null for ingredient in dish: " + name);
+            }
+            if (dishIngredient.getIdIngredient() == null) {
+                throw new RuntimeException("Ingredient reference is null in DishIngredient");
+            }
+
+            // Coût = prix de l'ingrédient * quantité requise
+            double ingredientCost = dishIngredient.getIngredient().getPrice() * dishIngredient.getQuantity();
+            totalCost += ingredientCost;
+        }
+
+        return totalCost;
     }
 
     public Dish() {

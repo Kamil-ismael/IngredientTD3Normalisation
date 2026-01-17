@@ -1,3 +1,4 @@
+TRUNCATE TABLE dish RESTART IDENTITY CASCADE;
 insert into dish (id, name, dish_type, price)
 values (1,'Salade fraîche', 'START', 3500.00),
        (2, 'Poulet grillé', 'MAIN', 12000.00),

@@ -1,4 +1,4 @@
-create type dish_type as enum ('STARTER', 'MAIN', 'DESSERT');
+create type dish_type as enum ('START', 'MAIN', 'DESSERT');
 
 create table dish
 (
@@ -18,7 +18,7 @@ create table ingredient
     category ingredient_category
 );
 
-create type unit_enum as enum ('KG', 'L', 'PIECE', 'G', 'ML');
+create type unit_enum as enum ('KG', 'L',  'PCS');
 
 create table dish_ingredient
 (
