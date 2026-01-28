@@ -1,4 +1,4 @@
-TRUNCATE TABLE dish RESTART IDENTITY CASCADE;
+TRUNCATE TABLE dish, ingredient, dish_ingredient RESTART IDENTITY CASCADE;
 insert into dish (id, name, dish_type, price)
 values (1,'Salade fraîche', 'START', 3500.00),
        (2, 'Poulet grillé', 'MAIN', 12000.00),
@@ -6,24 +6,29 @@ values (1,'Salade fraîche', 'START', 3500.00),
        (4, 'Gâteau au chocolat ', 'DESSERT', 8000.00),
        (5, 'Salade de fruits', 'DESSERT', NULL);
 
-insert into ingredient (id, name, category, price, id_dish)
-values (1, 'Laitue', 'VEGETABLE', 800.0, 1),
-       (2, 'Tomate', 'VEGETABLE', 600.0, 1),
-       (3, 'Poulet', 'ANIMAL', 4500.0, 2),
-       (4, 'Chocolat ', 'OTHER', 3000.0, 4),
-       (5, 'Beurre', 'DAIRY', 2500.0, 4);
+insert into ingredient (id, name, category, selling_price)
+values (1, 'Laitue', 'VEGETABLE', 800.0),
+       (2, 'Tomate', 'VEGETABLE', 600.0),
+       (3, 'Poulet', 'ANIMAL', 4500.0),
+       (4, 'Chocolat ', 'OTHER', 3000.0),
+       (5, 'Beurre', 'DAIRY', 2500.0);
 
 
-insert into dish_ingredient (id_dish, id_ingredient, quantity, unit) values
-(1, 1, 0.20, 'KG'),
-(1, 2, 0.15, 'KG'),
-(2, 3, 1.00, 'KG'),
-(4, 4, 0.30, 'KG'),
-(4, 5, 0.20, 'KG');
-update dish
-set price = 2000.0
-where id = 1;
+INSERT INTO dish_ingredient (id, id_dish, id_ingredient, quantity, unit) VALUES
+(1, 1, 1, 0.20, 'KG'),
+(2, 1, 2, 0.15, 'KG'),
+(3, 2, 3, 1.00, 'KG'),
+(4, 4, 4, 0.30, 'KG'),
+(5, 4, 5, 0.20, 'KG');
 
-update dish
-set price = 6000.0
-where id = 2;
+INSERT INTO stock_movement(id, id_ingredient, quantity, type, unit, creation_datetime) VALUES
+(1,1,5.0,'IN','KG','2024-01-05 08:00'),
+(2, 1, 0.2, 'OUT', 'KG', '2024-01-06 12:00'),
+(3, 2, 4.0, 'IN', 'KG', '2024-01-05 08:00'),
+(4, 2, 0.15, 'OUT', 'KG', '2024-01-06 12:00'),
+(5, 3, 10.0, 'IN', 'KG', '2024-01-04 09:00'),
+(6, 3, 1.0, 'OUT', 'KG', '2024-01-06 13:00'),
+(7, 4, 3.0, 'IN', 'KG', '2024-01-05 10:00'),
+(8, 4, 0.3, 'OUT', 'KG', '2024-01-06 14:00'),
+(9, 5, 2.5, 'IN', 'KG', '2024-01-05 10:00'),
+(10, 5, 0.2, 'OUT', 'KG', '2024-01-06 14:00');

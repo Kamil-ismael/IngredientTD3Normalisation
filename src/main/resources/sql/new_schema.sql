@@ -5,7 +5,7 @@ create table dish
     id serial primary key,
     name varchar(255),
     dish_type dish_type,
-    price numeric(10, 2)
+    selling_price numeric(10, 2)
 );
 
 create type ingredient_category as enum ('VEGETABLE', 'ANIMAL', 'MARINE', 'DAIRY', 'OTHER');
@@ -22,17 +22,40 @@ create type unit_enum as enum ('KG', 'L',  'PCS');
 
 create table dish_ingredient
 (
-    id_dish int,
-    id_ingredient int,
-    quantity numeric,
-    unit unit_enum,
-    primary key (id_dish, id_ingredient),
-    FOREIGN KEY (id_dish) REFERENCES dish(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_ingredient) REFERENCES ingredient(id) ON DELETE CASCADE
+    id serial primary key,
+    id_dish int references dish(id),
+    id_ingredient int references ingredient(id),
+    quantity numeric(10, 2),
+    unit unit_enum
 );
 
-alter table dish
-    add column if not exists price numeric(10, 2);
+create type movement_type as enum ('IN', 'OUT');
+
+create table if not exists stock_movement
+(
+    id  serial primary key,
+    id_ingredient int,
+    quantity    numeric(10,2),
+    unit    unit_enum,
+    type    movement_type,
+    creation_datetime timestamp without time zone,
+    foreign key (id_ingredient) references ingredient (id)
+);
 
 alter table ingredient
-    add column if not exists required_quantity numeric(10, 2);
+    add column if not exists initial_stock numeric(10, 2);
+
+create table if not exists "order"
+(
+    id                serial primary key,
+    reference         varchar(255),
+    creation_datetime timestamp without time zone
+);
+
+create table if not exists dish_order
+(
+    id       serial primary key,
+    id_order int references "order" (id),
+    id_dish  int references dish (id),
+    quantity int
+);

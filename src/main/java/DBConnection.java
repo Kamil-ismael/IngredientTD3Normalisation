@@ -5,10 +5,10 @@ import java.sql.SQLException;
 public class DBConnection {
     public Connection getConnection(){
          try{
-             String jdbcUrl = System.getenv("JDBC_URL");
-             String user = System.getenv("mini_dish_db_manger");
-             String password = System.getenv("mini_dish_db_manger_password");
-             return DriverManager.getConnection("jdbc:postgresql://localhost:5432/mini_dish_db", "mini_dish_db_manger", "123456");
+             String jdbcUrl = ("jdbc:postgresql://localhost:5432/mini_dish_db");
+             String user = ("mini_dish_db_manager");
+             String password = "123456";
+             return DriverManager.getConnection(jdbcUrl, user, password);
          } catch (SQLException e){
              throw new RuntimeException(e);
          }

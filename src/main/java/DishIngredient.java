@@ -1,67 +1,45 @@
-import java.util.Objects;
-
 public class DishIngredient {
-    private Integer idDish;
-    private Integer idIngredient;
+    private Dish dish;
+    private Ingredient ingredient;
     private Double quantity;
-    private UnitEnum unit;
+    private Unit unit;
 
-    public DishIngredient(Integer idDish, Integer idIngredient, Double quantity, UnitEnum unit) {
-        this.idDish = idDish;
-        this.idIngredient = idIngredient;
-        this.quantity = quantity;
-        this.unit = unit;
+    public Ingredient getIngredient() {
+        return ingredient;
     }
 
-    public Integer getIdDish() {
-        return idDish;
-    }
-
-    public Integer getIdIngredient() {
-        return idIngredient;
+    public void setIngredient(Ingredient ingredient) {
+        this.ingredient = ingredient;
     }
 
     public Double getQuantity() {
         return quantity;
     }
 
-    public UnitEnum getUnit() {
-        return unit;
-    }
-
-    public void setIdDish(int idDish) {
-        this.idDish = idDish;
-    }
-
-    public void setIdIngredient(int idIngredient) {
-        this.idIngredient = idIngredient;
-    }
-
     public void setQuantity(Double quantity) {
         this.quantity = quantity;
     }
 
-    public void setUnit(UnitEnum unit) {
+    public Unit getUnit() {
+        return unit;
+    }
+
+    public void setUnit(Unit unit) {
         this.unit = unit;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        DishIngredient that = (DishIngredient) o;
-        return Objects.equals(idDish, that.idDish) && Objects.equals(idIngredient, that.idIngredient) && Objects.equals(quantity, that.quantity) && unit == that.unit;
+    public Dish getDish() {
+        return dish;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(idDish, idIngredient, quantity, unit);
+    public void setDish(Dish dish) {
+        this.dish = dish;
     }
 
     @Override
     public String toString() {
         return "DishIngredient{" +
-                "idDish=" + idDish +
-                ", idIngredient=" + idIngredient +
+                "ingredient=" + ingredient +
                 ", quantity=" + quantity +
                 ", unit=" + unit +
                 '}';
