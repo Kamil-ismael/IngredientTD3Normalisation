@@ -7,6 +7,19 @@ public class Order {
     private String reference;
     private Instant creationDatetime;
     private List<DishOrder> dishOrderList;
+    private Table table;
+
+    public Order(){
+
+    }
+
+    public Table getTable() {
+        return table;
+    }
+
+    public void setTable(Table table) {
+        this.table = table;
+    }
 
     public Integer getId() {
         return id;
@@ -51,10 +64,12 @@ public class Order {
     }
 
     Double getTotalAmountWithoutVat() {
+
         throw new RuntimeException("Not implemented");
     }
 
     Double getTotalAmountWithVat() {
+
         throw new RuntimeException("Not implemented");
     }
 

@@ -49,7 +49,9 @@ create table if not exists "order"
 (
     id                serial primary key,
     reference         varchar(255),
-    creation_datetime timestamp without time zone
+    creation_datetime timestamp without time zone,
+    id_table int,
+    foreign key (id_table) references "Table"(id)
 );
 
 create table if not exists dish_order
@@ -58,4 +60,13 @@ create table if not exists dish_order
     id_order int references "order" (id),
     id_dish  int references dish (id),
     quantity int
+);
+
+create table if not exists "Table"
+(
+    id     serial primary key,
+    number int,
+    id_order int,
+    foreign key (id_order) references "order"(id)
+
 );

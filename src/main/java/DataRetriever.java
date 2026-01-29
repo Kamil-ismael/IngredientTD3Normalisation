@@ -1,5 +1,7 @@
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -419,6 +421,198 @@ public class DataRetriever {
 
         try (PreparedStatement ps = conn.prepareStatement(setValSql)) {
             ps.executeQuery();
+        }
+    }
+
+
+    public Order saveOrder(Order toSave) {
+        DBConnection dbConnection = new DBConnection();
+        Connection conn = null;
+
+        String insertOrderSql = """
+            INSERT INTO "order" (reference, creation_datetime, id_table, client_arrive_datetime)
+            VALUES (?, ?, ?, ?)
+            RETURNING id;
+        """;
+
+        try {
+            conn = dbConnection.getConnection();
+            conn.setAutoCommit(false); // Début de la transaction
+
+            if (toSave.getTable() == null || toSave.getTable() == null) {
+                throw new RuntimeException("Aucune table n'a été spécifiée pour la commande.");
+            }
+
+            // 1. Calculer les ingrédients requis
+            Map<Integer, StockValue> requiredIngredients = calculateRequiredIngredients(toSave.getDishOrders());
+
+            // 2. Vérifier la disponibilité du stock (en utilisant la connexion transactionnelle)
+            for (Map.Entry<Integer, StockValue> entry : requiredIngredients.entrySet()) {
+                StockValue required = entry.getValue();
+                StockValue available = getStockValueAt(entry.getKey(), toSave.getCreationDatetime(), conn);
+
+                if (available.getQuantity() < required.getQuantity()) {
+                    Ingredient ingredient = findIngredientById(entry.getKey(), conn);
+                    throw new RuntimeException("Stock insuffisant pour: " + ingredient.getName());
+                }
+            }
+
+            // 3. Vérifier la disponibilité de la table
+            Table requestedTable = toSave.getTable();
+            List<Table> availableTables = findAvailableTablesAt(toSave.getCreationDatetime());
+            if (availableTables.stream().noneMatch(t -> t.getId().equals(requestedTable.getId()))) {
+                String alternativeNumbers = availableTables.stream()
+                        .map(t -> String.valueOf(t.getNumber()))
+                        .collect(Collectors.joining(", "));
+                throw new RuntimeException(
+                        "La table " + requestedTable.getNumber() + " n'est pas disponible. Tables disponibles: " + alternativeNumbers
+                );
+            }
+
+            // 4. Insérer la commande et récupérer l'ID
+            int orderId;
+            try (PreparedStatement ps = conn.prepareStatement(insertOrderSql)) {
+                ps.setString(1, toSave.getReference());
+                ps.setTimestamp(2, Timestamp.from(toSave.getCreationDatetime()));
+                ps.setInt(3, toSave.getTableOrder().getTable().getId());
+                ps.setTimestamp(4, Timestamp.from(toSave.getTableOrder().getArrivalDatetime()));
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        orderId = rs.getInt(1);
+                    } else {
+                        throw new SQLException("La création de la commande a échoué, aucun ID obtenu.");
+                    }
+                }
+            }
+            // 5. Lier les plats à la commande
+            attachDishOrder(conn, orderId, toSave.getDishOrders()
+            for (Map.Entry<Integer, StockValue> entry : requiredIngredients.entrySet()) {
+                StockMovement movement = new StockMovement();
+                movement.setType(MovementTypeEnum.OUT);
+                movement.setCreationDatetime(toSave.getCreationDatetime());
+                movement.setValue(entry.getValue());
+                attachStockMovement(conn, entry.getKey(), List.of(movement));
+            }
+
+            conn.commit(); // Valider la transaction
+            toSave.setId(orderId);
+            return toSave;
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Annulation de la transaction en cas d'erreur
+                } catch (SQLException ex) {
+                    throw new RuntimeException("Erreur critique lors de l'annulation de la transaction.", ex);
+                }
+            }
+            throw new RuntimeException("L'opération a échoué : " + e.getMessage(), e);
+        } finally {
+            if (conn != null) {
+                dbConnection.closeConnection(conn);
+            }
+        }
+    }
+
+    // --- Méthodes de recherche (Corrigées) ---
+
+    public List<Table> findAllTables() {
+        DBConnection dbConnection = new DBConnection();
+        String sql = """
+            SELECT t.id AS t_id, t.number AS t_number, o.id AS o_id, o.reference,
+                   o.creation_datetime, o.client_arrive_datetime, o.client_leave_datetime
+            FROM "table" t
+            LEFT JOIN "order" o ON o.id_table = t.id
+            ORDER BY t.number;
+        """;
+        Map<Integer, Table> tablesMap = new HashMap<>();
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                int tableId = rs.getInt("t_id");
+                // Correction du bug : On récupère ou on crée la table avant de l'utiliser.
+                Table table = tablesMap.get(tableId);
+                if (table == null) {
+                    table = new Table();
+                    table.setId(tableId);
+                    table.setNumber(rs.getInt("t_number"));
+                    table.setOrders(new ArrayList<>());
+                    tablesMap.put(tableId, table);
+                }
+
+                int orderId = rs.getInt("o_id");
+                if (!rs.wasNull()) {
+                    Order order = new Order();
+                    order.setId(orderId);
+                    order.setReference(rs.getString("reference"));
+                    order.setCreationDatetime(rs.getTimestamp("creation_datetime").toInstant());
+
+                    TableOrder tableOrder = new TableOrder();
+                    tableOrder.setTableOrder(table);
+                    tableOrder.setArrivalDatetime(rs.getTimestamp("client_arrive_datetime").toInstant());
+                    Timestamp leaveTs = rs.getTimestamp("client_leave_datetime");
+                    tableOrder.setDepartureDatetime(leaveTs != null ? leaveTs.toInstant() : null);
+
+                    order.setTable(table);
+                    table.getOrders().add(order);
+                }
+            }
+            return new ArrayList<>(tablesMap.values());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Table> findAvailableTablesAt(Instant instant) {
+        DBConnection dbConnection = new DBConnection();
+        String sql = """
+            SELECT t.id, t.number FROM "table" t
+            WHERE NOT EXISTS (
+                SELECT 1 FROM "order" o
+                WHERE o.id_table = t.id AND o.client_leave_datetime IS NULL
+            ) ORDER BY t.number;
+        """;
+        List<Table> availableTables = new ArrayList<>();
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Table table = new Table();
+                table.setId(rs.getInt("id"));
+                table.setNumber(rs.getInt("number"));
+                availableTables.add(table);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return availableTables;
+    }
+
+    private StockValue getStockValueAt(int ingredientId, Instant time, Connection conn) throws SQLException {
+        String sql = "SELECT quantity, type, unit FROM stock_movement WHERE id_ingredient = ? AND creation_datetime <= ?";
+        double totalQuantity = 0;
+        Unit unit = null; // Suppose que l'unité est cohérente pour un même ingrédient
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, ingredientId);
+            ps.setTimestamp(2, Timestamp.from(time));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                if (unit == null) {
+                    unit = Unit.valueOf(rs.getString("unit"));
+                }
+                if ("IN".equals(rs.getString("type"))) {
+                    totalQuantity += rs.getDouble("quantity");
+                } else {
+                    totalQuantity -= rs.getDouble("quantity");
+                }
+            }
+            return new StockValue(totalQuantity, unit != null ? unit : Unit.KG);
+
+
         }
     }
 }
